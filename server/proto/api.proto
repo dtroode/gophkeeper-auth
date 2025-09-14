@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package api;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/dtroode/gophkeeper-auth/server/proto";
+
+message KDFParams {
+  uint32 time = 1;
+  uint32 mem_kib = 2;
+  uint32 par = 3;
+}
+
+message RegStart {
+  string login = 1;
+}
+
+message RegParams {
+  KDFParams kdf_params = 1;
+  bytes salt_root = 2;
+  string session_id = 3;
+}
+
+message RegComplete {
+  string session_id = 1;
+  string login = 2;
+  bytes salt_root = 3;
+  KDFParams kdf_params = 4;
+  bytes stored_key = 5;
+  bytes server_key = 6;
+}
+
+message LoginStart {
+  string login = 1;
+  bytes client_nonce = 2;
+}
+
+message LoginParams {
+  KDFParams kdf_params = 1;
+  bytes salt_root = 2;
+  bytes server_nonce = 3;
+  string session_id = 4;
+}
+
+message LoginComplete {
+  string session_id = 1;
+  string login = 2;
+  bytes client_nonce = 3;
+  bytes server_nonce = 4;
+  bytes client_proof = 5;
+}
+
+message SessionResult {
+  bytes server_signature = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+}
+
+message RevokeTokenRequest {
+  string refresh_token = 1;
+}
+
+service Auth {
+  rpc GetRegParams(RegStart) returns (RegParams);
+  rpc CompleteReg(RegComplete) returns (google.protobuf.Empty);
+  rpc GetLoginParams(LoginStart) returns (LoginParams);
+  rpc CompleteLogin(LoginComplete) returns (SessionResult);
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  rpc RevokeToken(RevokeTokenRequest) returns (google.protobuf.Empty);
+}
